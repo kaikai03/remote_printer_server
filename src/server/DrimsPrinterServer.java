@@ -35,9 +35,6 @@ public class DrimsPrinterServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
     	System.out.println("onClose");
-    	System.out.println(conn);
-    	System.out.println(remote);
-    	System.out.println(reason);
     	System.out.println("user leave:"+getClientName(conn));
     	
         clientOffline(conn);
@@ -50,6 +47,13 @@ public class DrimsPrinterServer extends WebSocketServer {
         if(null != message &&message.startsWith("login#//")){
         	//分离出客户端名称
             String clientName = message.replaceFirst("login#//", "");
+            
+            if(getClientConn(clientName) != null) {
+            	System.out.println("已存在设备，禁止重复加入:"+clientName);
+            	conn.send("fuckoff#//禁止重复登录,请检查设备名，或联系开发人员检查打印队列");
+            	return ;
+            }
+            
             System.out.println("设备加入:"+clientName);
             clientOnline(conn,clientName);//设备 加入
             return ;
@@ -122,6 +126,17 @@ public class DrimsPrinterServer extends WebSocketServer {
         return Pool.getClientByWs(conn);
     }
     
+    /**
+     * 通过连接对象，查询客户端名称
+     */
+    private WebSocket getClientConn(String clientName){
+        return Pool.getWsByClient(clientName);
+    }
+    
+    
+    /**
+     * 發消息
+     */
     private void sendTo(String clientName, String msg){
     	Pool.sendMessageToClient(clientName, msg);
     }
