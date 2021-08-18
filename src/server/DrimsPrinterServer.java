@@ -35,8 +35,13 @@ public class DrimsPrinterServer extends WebSocketServer {
     @Override
     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
     	System.out.println("onClose");
-    	System.out.println("user leave:"+getClientName(conn));
+    	String client = getClientName(conn);
+    	if(client == null) {
+    		// 非正常登录的连接，不做处理。
+    		return;
+    	}
     	
+    	System.out.println("user leave:"+client);
         clientOffline(conn);
     }
 
@@ -51,6 +56,7 @@ public class DrimsPrinterServer extends WebSocketServer {
             if(getClientConn(clientName) != null) {
             	System.out.println("已存在设备，禁止重复加入:"+clientName);
             	conn.send("fuckoff#//禁止重复登录,请检查设备名，或联系开发人员检查打印队列");
+            	conn.close();
             	return ;
             }
             
@@ -85,16 +91,9 @@ public class DrimsPrinterServer extends WebSocketServer {
                 break;
             }
         }else if(null != message && message.startsWith("ping#//")){
-        	
+        	//暂时没实现客户端ping服务器
         }
-        
-        else if(null != message && message.equals("Hello 2")){
-        	//回复测试测试测试测试测试测试测试
-        	System.out.println("sendTo");
-        	sendTo("193.QQ", "fuck");
-//        	sendPrintOrder("193.QQ", "测试地址");
-            return ;
-        }
+
         
 
     }
@@ -151,7 +150,7 @@ public class DrimsPrinterServer extends WebSocketServer {
     }
     
     /**
-     * 发送ping
+     * 向所有设备发送ping
      */
     public void sendPing(String flag){
     	Pool.sendMessageToAll("ping#//"+flag);
@@ -160,11 +159,10 @@ public class DrimsPrinterServer extends WebSocketServer {
      * 发送打印指令
      */
     public void sendPrintOrder(String clientName, String printAddress){
-//    	String msg = "printOrder#//"+printAddress;
-    	String msg = "printOrder#//";
-    	String msg2 = "https://test.drims.cn/view/preciousBaby/scale/rd_print.jsp?&tableName=rd_scale_physical&tableDesc=体格生长&itemId=309&detailId=4313&printReporter=吕&printReporterId=3&printSign=8b3de1aa14e8453284f96b8333e01c9c&sendId=2119&visNo=A368&isprint=undefined&growPrint=true";
-    	sendTo(clientName, msg+msg2);
+    	String msg = "printOrder#//"+printAddress;
+    	sendTo(clientName, msg);
     }
+
     
 
 }
